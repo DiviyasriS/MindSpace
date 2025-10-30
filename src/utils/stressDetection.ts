@@ -3,24 +3,47 @@ import { StressAnalysis } from '../types';
 const stressKeywords = {
   critical: [
     'suicidal', 'kill myself', 'end it all', 'no point', 'give up',
-    'can\'t go on', 'worthless', 'hopeless'
+    'can\'t go on', 'worthless', 'hopeless', 'want to die', 'better off dead',
+    'suicide', 'harm myself', 'no reason to live'
   ],
   high: [
     'overwhelmed', 'anxious', 'panic', 'breakdown', 'can\'t cope',
-    'terrified', 'exhausted', 'failing', 'drowning', 'crushed'
+    'terrified', 'exhausted', 'failing', 'drowning', 'crushed',
+    'severe anxiety', 'panic attack', 'can\'t breathe', 'losing control',
+    'depressed', 'empty', 'numb'
   ],
   moderate: [
     'stressed', 'worried', 'nervous', 'pressure', 'difficult',
-    'struggling', 'tired', 'concerned', 'uncertain', 'frustrated'
+    'struggling', 'tired', 'concerned', 'uncertain', 'frustrated',
+    'anxious', 'tense', 'uneasy', 'restless'
   ],
   low: [
     'okay', 'manageable', 'fine', 'handling', 'coping',
-    'getting through', 'trying', 'working on'
+    'getting through', 'trying', 'working on', 'better', 'improving'
   ]
 };
 
-const positiveWords = ['happy', 'excited', 'grateful', 'proud', 'accomplished', 'relieved', 'better', 'improving'];
-const negativeWords = ['sad', 'angry', 'frustrated', 'disappointed', 'afraid', 'lonely', 'isolated'];
+const positiveWords = [
+  'happy', 'excited', 'grateful', 'proud', 'accomplished', 'relieved',
+  'better', 'improving', 'hopeful', 'optimistic', 'peaceful', 'content',
+  'joyful', 'thankful'
+];
+
+const negativeWords = [
+  'sad', 'angry', 'frustrated', 'disappointed', 'afraid', 'lonely',
+  'isolated', 'depressed', 'anxious', 'scared', 'worried', 'hopeless',
+  'empty', 'numb', 'worthless'
+];
+
+const topicKeywords = {
+  anxiety: ['anxiety', 'anxious', 'panic', 'worried', 'nervous', 'fear'],
+  depression: ['depressed', 'sad', 'empty', 'hopeless', 'numb', 'worthless'],
+  stress: ['stress', 'overwhelmed', 'pressure', 'burden'],
+  sleep: ['sleep', 'insomnia', 'tired', 'exhausted', 'nightmares'],
+  loneliness: ['lonely', 'alone', 'isolated', 'no friends'],
+  academic: ['exam', 'test', 'grade', 'study', 'assignment', 'deadline'],
+  relationships: ['relationship', 'friend', 'family', 'breakup']
+};
 
 export const analyzeStress = (text: string): StressAnalysis => {
   const lowerText = text.toLowerCase();
@@ -28,25 +51,46 @@ export const analyzeStress = (text: string): StressAnalysis => {
 
   let stressLevel: 'low' | 'moderate' | 'high' | 'critical' = 'low';
   const detectedIndicators: string[] = [];
+  const detectedKeywords: string[] = [];
   let stressScore = 0;
 
   if (stressKeywords.critical.some(keyword => lowerText.includes(keyword))) {
     stressLevel = 'critical';
     stressScore = 0.95;
     detectedIndicators.push('Crisis-level language detected');
+    stressKeywords.critical.forEach(kw => {
+      if (lowerText.includes(kw)) detectedKeywords.push(kw);
+    });
   } else if (stressKeywords.high.some(keyword => lowerText.includes(keyword))) {
     stressLevel = 'high';
     stressScore = 0.75;
     detectedIndicators.push('High stress indicators');
+    stressKeywords.high.forEach(kw => {
+      if (lowerText.includes(kw)) detectedKeywords.push(kw);
+    });
   } else if (stressKeywords.moderate.some(keyword => lowerText.includes(keyword))) {
     stressLevel = 'moderate';
     stressScore = 0.50;
     detectedIndicators.push('Moderate stress signals');
+    stressKeywords.moderate.forEach(kw => {
+      if (lowerText.includes(kw)) detectedKeywords.push(kw);
+    });
   } else {
     stressLevel = 'low';
     stressScore = 0.25;
     detectedIndicators.push('Low stress indicators');
   }
+
+  Object.entries(topicKeywords).forEach(([topic, keywords]) => {
+    if (keywords.some(kw => lowerText.includes(kw))) {
+      detectedIndicators.push(`Discussing ${topic}`);
+      keywords.forEach(kw => {
+        if (lowerText.includes(kw) && !detectedKeywords.includes(kw)) {
+          detectedKeywords.push(kw);
+        }
+      });
+    }
+  });
 
   const hasExclamation = (text.match(/!/g) || []).length > 2;
   const hasQuestions = (text.match(/\?/g) || []).length > 2;
@@ -86,6 +130,7 @@ export const analyzeStress = (text: string): StressAnalysis => {
     stress_level: stressLevel,
     confidence_score: Math.min(stressScore, 1),
     detected_indicators: detectedIndicators,
+    detected_keywords: detectedKeywords,
     sentiment_score: Math.max(-1, Math.min(1, sentimentScore)),
     recommended_resources: recommendedResources,
     created_at: new Date().toISOString()

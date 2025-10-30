@@ -27,6 +27,7 @@ export interface StressAnalysis {
   stress_level: 'low' | 'moderate' | 'high' | 'critical';
   confidence_score: number;
   detected_indicators: string[];
+  detected_keywords?: string[];
   sentiment_score: number;
   recommended_resources: string[];
   created_at: string;
@@ -34,9 +35,21 @@ export interface StressAnalysis {
 
 export interface ChatMessage {
   id: string;
+  session_id?: string;
   role: 'user' | 'assistant';
   content: string;
+  sentiment_score?: number;
+  stress_level?: 'low' | 'moderate' | 'high' | 'critical';
+  detected_keywords?: string[];
   created_at: string;
+}
+
+export interface ChatSession {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Resource {
